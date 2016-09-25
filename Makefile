@@ -31,26 +31,55 @@ cache-test: $(EXEC)
 	echo 1 | sudo tee /proc/sys/vm/drop_caches # Drop the cache
 	perf stat --repeat 100 \
 		-e cache-misses,cache-references,instructions,cycles \
-		./phonebook_orig
+		./phonebook_orig > /dev/null
 	echo 1 | sudo tee /proc/sys/vm/drop_caches # Drop the cache
 	perf stat --repeat 100 \
 		-e cache-misses,cache-references,instructions,cycles \
-		./phonebook_opt
+		./phonebook_opt > /dev/null
 	echo 1 | sudo tee /proc/sys/vm/drop_caches # Drop the cache
 	perf stat --repeat 100 \
 		-e cache-misses,cache-references,instructions,cycles \
-		./phonebook_strcp
+		./phonebook_strcp > /dev/null
+
+cache-record: $(EXEC)
+	echo 1 | sudo tee /proc/sys/vm/drop_caches # Drop the cache
+	3>perf_orig.log perf stat --repeat 100 \
+		-e cache-misses \
+		-x cache-misses \
+		--log-fd 3 \
+		./phonebook_orig > /dev/null
+	echo 1 | sudo tee /proc/sys/vm/drop_caches # Drop the cache
+	3>perf_opt.log perf stat --repeat 100 \
+		-e cache-misses \
+		-x cache-misses \
+		--log-fd 3 \
+		./phonebook_opt > /dev/null
+	echo 1 | sudo tee /proc/sys/vm/drop_caches # Drop the cache
+	3>perf_strcp.log perf stat --repeat 100 \
+		-e cache-misses \
+		-x cache-misses \
+		--log-fd 3 \
+		./phonebook_strcp > /dev/null
+
 
 output.txt: cache-test calculate
 	./calculate
 
-plot: output.txt
+cache.txt: cache-record calculate_cache
+	./calculate_cache
+
+plot: output.txt cache.txt
 	gnuplot scripts/runtime.gp
+	gnuplot scripts/cache.gp
 
 calculate: calculate.c
+	$(CC) $(CFLAGS_common) $^ -o $@
+
+calculate_cache: calculate_cache.c
 	$(CC) $(CFLAGS_common) $^ -o $@
 
 .PHONY: clean
 clean:
 	$(RM) $(EXEC) *.o perf.* \
-	      	calculate orig.txt opt.txt opt_strCompress.txt output.txt runtime.png
+	      	calculate orig.txt opt.txt opt_strCompress.txt output.txt runtime.png \
+					calculate_cache perf_orig.log perf_opt.log perf_strcp.log output_cache.txt cache.png
