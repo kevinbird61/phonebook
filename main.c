@@ -36,6 +36,10 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+#if defined(STRCP)
+    InitHuffmanTB();
+#endif
+
     /* build the entry */
     entry *pHead, *e;
     pHead = (entry *) malloc(sizeof(entry));
@@ -66,9 +70,11 @@ int main(int argc, char *argv[])
     char input[MAX_LAST_NAME_SIZE] = "zyxel";
     e = pHead;
 
+#ifndef STRCP
     assert(findName(input, e) &&
            "Did you implement findName() in " IMPL "?");
     assert(0 == strcmp(findName(input, e)->lastName, "zyxel"));
+#endif
 
 #if defined(__GNUC__)
     __builtin___clear_cache((char *) pHead, (char *) pHead + sizeof(entry));
@@ -82,6 +88,8 @@ int main(int argc, char *argv[])
     FILE *output;
 #if defined(OPT)
     output = fopen("opt.txt", "a");
+#elif defined(STRCP)
+    output = fopen("opt_strCompress.txt","a");
 #else
     output = fopen("orig.txt", "a");
 #endif

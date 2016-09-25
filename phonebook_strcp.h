@@ -3,7 +3,7 @@
 
 #define MAX_LAST_NAME_SIZE 16
 
-#define OPT 1 // use in main.c , for switching the result file
+#define STRCP 1 // use in main.c , for switching the result file
 
 typedef struct __PHONE_BOOK_SUBENTRY {
     /* Now unuse info */
@@ -19,11 +19,20 @@ typedef struct __PHONE_BOOK_SUBENTRY {
 } sub_entry;
 
 typedef struct __PHONE_BOOK_ENTRY {
-    char lastName[MAX_LAST_NAME_SIZE];
+    char *lastName;
     sub_entry *detail;
     struct __PHONE_BOOK_ENTRY *pNext;
 } entry;
 
+typedef struct __HUFF_COMPRESS {
+    int value;
+    int ori_length;
+} huff_cp;
+
+huff_cp huffTB[26];
+
+void InitHuffmanTB();
+char *huffmanEncode(char lasName[]);
 entry *findName(char lastname[], entry *pHead);
 entry *append(char lastName[], entry *e);
 
